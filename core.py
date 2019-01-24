@@ -27,9 +27,11 @@ class TableLogger():
     def append(self, output):
         if not hasattr(self, 'keys'):
             self.keys = output.keys()
-            print(*(f'{k:>12s}' for k in self.keys))
-        filtered = [output[k] for k in self.keys]
-        print(*(f'{v:12.4f}' if isinstance(v, np.float) else f'{v:12}' for v in filtered))
+            print('epoch',
+                  *('{:>10s}'.format(k) for k in self.keys if k is not 'epoch'))
+        filtered = [output[k] for k in self.keys if k is not 'epoch']
+        print('{:5}'.format(output.get('epoch', '')),
+              *('{:10.4f}'.format(v) if isinstance(v, np.float) else '{:10}'.format(v) for v in filtered))
 
 #####################
 ## data preprocessing
