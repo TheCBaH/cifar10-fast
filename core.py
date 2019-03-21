@@ -4,6 +4,7 @@ import time
 import numpy as np
 import pandas as pd
 from functools import singledispatch
+import xarray
 
 #####################
 # utils
@@ -32,6 +33,33 @@ class TableLogger():
         filtered = [output[k] for k in self.keys if k is not 'epoch']
         print('{:5}'.format(output.get('epoch', '')),
               *('{:10.4f}'.format(v) if isinstance(v, np.float) else '{:10}'.format(v) for v in filtered))
+
+def dict_to_xarray(d):
+    keys = list(d.keys())
+    data = [d[k] for k in keys]
+    return xarray.DataArray(data, coords=[keys], dims=['field'])
+
+class XarrayLogger():
+    def __init__(self):
+        self.n_epoch = 0
+
+    def append(self, row):
+        self.n_epoch += 1
+        row = dict_to_xarray(row).expand_dims('epoch').assign_coords(epoch=[self.n_epoch])
+        if not hasattr(self, 'data'):
+            self.data = row
+        else:
+            self.data = xarray.concat((self.data, row), dim='epoch')
+
+    def numpy(self):
+        if not hasattr(self, 'data'):
+            return np.array(())
+        return self.data.data
+
+    def __str__(self):
+        if not hasattr(self, 'data'):
+            return "Empty XarrayLogger() object"
+        return str(self.data)
 
 #####################
 ## data preprocessing
