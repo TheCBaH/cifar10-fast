@@ -4,8 +4,10 @@ from torch import nn
 import torchvision
 from core import build_graph, cat, to_numpy
 
+from torchutils.device import cuda_is_really_available
+
 torch.backends.cudnn.benchmark = True
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:0" if cuda_is_really_available() else "cpu")
 
 @cat.register(torch.Tensor)
 def _(*xs):
