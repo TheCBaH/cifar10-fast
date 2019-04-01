@@ -1,5 +1,5 @@
 from inspect import signature
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 import time
 import numpy as np
 import pandas as pd
@@ -143,7 +143,11 @@ class Transform():
 ## dict utils
 #####################
 
-union = lambda *dicts: {k: v for d in dicts for (k, v) in d.items()}
+def union(*dicts):
+    dd = OrderedDict()
+    for d in dicts:
+        dd.update(d)
+    return dd
 
 def path_iter(nested_dict, pfx=()):
     for name, val in nested_dict.items():
