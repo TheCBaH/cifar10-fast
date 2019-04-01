@@ -28,6 +28,10 @@ def warmup_cudnn(model, batch_size):
     model.zero_grad()
     torch.cuda.synchronize()
 
+def set_rng_seeds(seed):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
 
 #####################
 ## dataset
