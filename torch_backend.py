@@ -5,6 +5,7 @@ import torchvision
 from core import build_graph, cat, to_numpy
 
 torch.backends.cudnn.benchmark = True
+use_cpu = not torch.cuda.is_available()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 @cat.register(torch.Tensor)
@@ -16,6 +17,9 @@ def _(x):
     return x.detach().cpu().numpy()  
 
 def warmup_cudnn(model, batch_size):
+    if use_cpu:
+        return
+    print(device)
     #run forward and backward pass of the model on a batch of random inputs
     #to allow benchmarking of cudnn kernels 
     batch = {
@@ -62,7 +66,7 @@ class Batches():
     def __iter__(self):
         if self.set_random_choices:
             self.dataset.set_random_choices() 
-        return ({'input': x.to(device).half(), 'target': y.to(device).long()} for (x,y) in self.dataloader)
+        return ({'input': x if use_cpu else x.to(device).half(), 'target': y if use_cpu else y.to(device).long()} for (x,y) in self.dataloader)
     
     def __len__(self): 
         return len(self.dataloader)
@@ -123,6 +127,8 @@ class Network(nn.Module):
         return self.cache
     
     def half(self):
+        if use_cpu:
+            return self
         for module in self.children():
             if not isinstance(module, nn.BatchNorm2d):
                 module.half()    
