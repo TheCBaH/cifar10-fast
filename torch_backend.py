@@ -192,8 +192,7 @@ class TorchOptimiser():
         return repr(self._opt)
 
 
-def SGD(weights, lr=0, momentum=0,
-        weight_decay=0, dampening=0, nesterov=False):
+def SGD(weights, lr=0, momentum=0, weight_decay=0, dampening=0, nesterov=False):
     return TorchOptimiser(weights, torch.optim.SGD, lr=lr, momentum=momentum,
                           weight_decay=weight_decay, dampening=dampening,
                           nesterov=nesterov)
