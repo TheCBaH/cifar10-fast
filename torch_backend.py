@@ -20,7 +20,9 @@ def warmup_cudnn(model, batch_size):
     #to allow benchmarking of cudnn kernels
     input = torch.Tensor(np.random.rand(batch_size,3,32,32))
     target = torch.LongTensor(np.random.randint(0,10,batch_size))
-    if device != 'cpu':
+    if device in ('cpu', torch.device('cpu')):
+        input = input.float()
+    else:
         input = input.cuda().half()
         target = target.cuda()
     batch = {'input': input, 'target': target}
@@ -60,7 +62,7 @@ class Batches():
         if self.set_random_choices:
             self.dataset.set_random_choices()
         return (
-            {'input': x.to(device) if device == 'cpu' else x.to(device).half(),
+            {'input': x.to(device).float() if device in ('cpu', torch.device('cpu')) else x.to(device).half(),
              'target': y.to(device).long()}
             for (x,y) in self.dataloader
         )
