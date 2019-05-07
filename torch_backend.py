@@ -10,19 +10,22 @@ from torchutils.device import cuda_is_really_available
 torch.backends.cudnn.benchmark = True
 device = torch.device("cuda:0" if cuda_is_really_available() else "cpu")
 
+
 @cat.register(torch.Tensor)
 def _(*xs):
     return torch.cat(xs)
 
+
 @to_numpy.register(torch.Tensor)
 def _(x):
-    return x.detach().cpu().numpy()  
+    return x.detach().cpu().numpy()
+
 
 def warmup_cudnn(model, batch_size):
-    #run forward and backward pass of the model on a batch of random inputs
-    #to allow benchmarking of cudnn kernels
-    input = torch.Tensor(np.random.rand(batch_size,3,32,32))
-    target = torch.LongTensor(np.random.randint(0,10,batch_size))
+    # run forward and backward pass of the model on a batch of random inputs
+    # to allow benchmarking of cudnn kernels
+    input = torch.Tensor(np.random.rand(batch_size, 3, 32, 32))
+    target = torch.LongTensor(np.random.randint(0, 10, batch_size))
     if device in ('cpu', torch.device('cpu')):
         input = input.float()
     else:
@@ -35,18 +38,22 @@ def warmup_cudnn(model, batch_size):
     model.zero_grad()
     torch.cuda.synchronize()
 
+
 def set_rng_seeds(seed):
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     np.random.seed(seed)
 
-#####################
-## dataset
-#####################
+#
+# dataset
+#
+
 
 def cifar10(root):
-    train_set = torchvision.datasets.CIFAR10(root=root, train=True, download=True)
-    test_set = torchvision.datasets.CIFAR10(root=root, train=False, download=True)
+    train_set = torchvision.datasets.CIFAR10(
+        root=root, train=True, download=True)
+    test_set = torchvision.datasets.CIFAR10(
+        root=root, train=False, download=True)
     # Need to check for both naming conventions used in torchvision >=0.2.2
     # (`data` and `targets`), and those from torchvision >=0.2.1 (train/test_set
     # and train/test_labels)
@@ -57,59 +64,77 @@ def cifar10(root):
                  'labels': test_set.targets if hasattr(test_set, 'targets') else test_set.test_labels},
     }
 
-#####################
-## data loading
-#####################
+#
+# data loading
+#
+
 
 class Batches():
-    def __init__(self, dataset, batch_size, shuffle, set_random_choices=False, num_workers=0, drop_last=False):
+
+    def __init__(self, dataset, batch_size, shuffle,
+                 set_random_choices=False, num_workers=0, drop_last=False):
         self.dataset = dataset
         self.batch_size = batch_size
         self.set_random_choices = set_random_choices
         self.dataloader = torch.utils.data.DataLoader(
             dataset, batch_size=batch_size, num_workers=num_workers, pin_memory=True, shuffle=shuffle, drop_last=drop_last
         )
-    
+
     def __iter__(self):
         if self.set_random_choices:
             self.dataset.set_random_choices()
         return (
             {'input': x.to(device).float() if device in ('cpu', torch.device('cpu')) else x.to(device).half(),
              'target': y.to(device).long()}
-            for (x,y) in self.dataloader
+            for (x, y) in self.dataloader
         )
 
-    def __len__(self): 
+    def __len__(self):
         return len(self.dataloader)
 
-#####################
-## torch stuff
-#####################
+#
+# torch stuff
+#
+
 
 class Identity(nn.Module):
+
     def forward(self, x): return x
-    
+
+
 class Mul(nn.Module):
+
     def __init__(self, weight):
         super().__init__()
         self.weight = weight
-    def __call__(self, x): 
-        return x*self.weight
-    
+
+    def __call__(self, x):
+        return x * self.weight
+
+
 class Flatten(nn.Module):
+
     def forward(self, x): return x.view(x.size(0), x.size(1))
 
-class Add(nn.Module):
-    def forward(self, x, y): return x + y 
-    
-class Concat(nn.Module):
-    def forward(self, *xs): return torch.cat(xs, 1)
-    
-class Correct(nn.Module):
-    def forward(self, classifier, target):
-        return classifier.max(dim = 1)[1] == target
 
-def batch_norm(num_channels, bn_bias_init=None, bn_bias_freeze=False, bn_weight_init=None, bn_weight_freeze=False):
+class Add(nn.Module):
+
+    def forward(self, x, y): return x + y
+
+
+class Concat(nn.Module):
+
+    def forward(self, *xs): return torch.cat(xs, 1)
+
+
+class Correct(nn.Module):
+
+    def forward(self, classifier, target):
+        return classifier.max(dim=1)[1] == target
+
+
+def batch_norm(num_channels, bn_bias_init=None,
+               bn_bias_freeze=False, bn_weight_init=None, bn_weight_freeze=False):
     m = nn.BatchNorm2d(num_channels)
     if bn_bias_init is not None:
         m.bias.data.fill_(bn_bias_init)
@@ -119,16 +144,16 @@ def batch_norm(num_channels, bn_bias_init=None, bn_bias_freeze=False, bn_weight_
         m.weight.data.fill_(bn_weight_init)
     if bn_weight_freeze:
         m.weight.requires_grad = False
-        
+
     return m
 
 
-
 class Network(nn.Module):
+
     def __init__(self, net):
         self.graph = build_graph(net)
         super().__init__()
-        for n, (v, _) in self.graph.items(): 
+        for n, (v, _) in self.graph.items():
             setattr(self, n, v)
 
     def forward(self, inputs):
@@ -136,25 +161,28 @@ class Network(nn.Module):
         for n, (_, i) in self.graph.items():
             self.cache[n] = getattr(self, n)(*[self.cache[x] for x in i])
         return self.cache
-    
+
     def half(self):
         for module in self.children():
             if not isinstance(module, nn.BatchNorm2d):
-                module.half()    
+                module.half()
         return self
 
-trainable_params = lambda model:filter(lambda p: p.requires_grad, model.parameters())
+trainable_params = lambda model: filter(
+    lambda p: p.requires_grad, model.parameters())
+
 
 class TorchOptimiser():
+
     def __init__(self, weights, optimizer, step_number=0, **opt_params):
         self.weights = weights
         self.step_number = step_number
         self.opt_params = opt_params
         self._opt = optimizer(weights, **self.param_values())
-    
+
     def param_values(self):
-        return {k: v(self.step_number) if callable(v) else v for k,v in self.opt_params.items()}
-    
+        return {k: v(self.step_number) if callable(v) else v for k, v in self.opt_params.items()}
+
     def step(self):
         self.step_number += 1
         self._opt.param_groups[0].update(**self.param_values())
@@ -162,8 +190,10 @@ class TorchOptimiser():
 
     def __repr__(self):
         return repr(self._opt)
-        
-def SGD(weights, lr=0, momentum=0, weight_decay=0, dampening=0, nesterov=False):
-    return TorchOptimiser(weights, torch.optim.SGD, lr=lr, momentum=momentum, 
-                          weight_decay=weight_decay, dampening=dampening, 
+
+
+def SGD(weights, lr=0, momentum=0,
+        weight_decay=0, dampening=0, nesterov=False):
+    return TorchOptimiser(weights, torch.optim.SGD, lr=lr, momentum=momentum,
+                          weight_decay=weight_decay, dampening=dampening,
                           nesterov=nesterov)
