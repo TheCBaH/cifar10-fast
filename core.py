@@ -163,12 +163,14 @@ RelativePath = namedtuple('RelativePath', ('parts'))
 rel_path = lambda *parts: RelativePath(parts)
 
 def build_graph(net):
-    net = dict(path_iter(net)) 
+    net = OrderedDict(path_iter(net))
     default_inputs = [[('input',)]]+[[k] for k in net.keys()]
     with_default_inputs = lambda vals: (val if isinstance(val, tuple) else (val, default_inputs[idx]) for idx,val in enumerate(vals))
     parts = lambda path, pfx: tuple(pfx) + path.parts if isinstance(path, RelativePath) else (path,) if isinstance(path, str) else path
-    return {sep.join(map(str, (*pfx, name))): (val, [sep.join(map(str, parts(x, pfx))) for x in inputs]) for (*pfx, name), (val, inputs) in zip(net.keys(), with_default_inputs(net.values()))}
-    
+    graph = OrderedDict()
+    for (*pfx, name), (val, inputs) in zip(net.keys(), with_default_inputs(net.values())):
+        graph[sep.join(map(str, (*pfx, name)))] = (val, [sep.join(map(str, parts(x, pfx))) for x in inputs])
+    return graph
 
 #####################
 ## training utils

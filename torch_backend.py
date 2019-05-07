@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import numpy as np
 import torch
 from torch import nn
@@ -131,7 +132,7 @@ class Network(nn.Module):
             setattr(self, n, v)
 
     def forward(self, inputs):
-        self.cache = dict(inputs)
+        self.cache = OrderedDict(inputs)
         for n, (_, i) in self.graph.items():
             self.cache[n] = getattr(self, n)(*[self.cache[x] for x in i])
         return self.cache
