@@ -78,10 +78,15 @@ def main():
     print('Preprocessing test data')
     test_set = list(zip(transpose(normalise(dataset['test']['data'])), dataset['test']['labels']))
     print(f'Finished in {timer():.2} seconds')
-    
+
+    train_set = list(zip(transpose(dataset['train']['data']), dataset['train']['labels']))
+    test_set = list(zip(transpose(dataset['test']['data']), dataset['test']['labels']))
+
     TSV = TSVLogger()
     
-    train_batches = Batches(Transform(train_set, train_transforms), batch_size, shuffle=True, set_random_choices=True, drop_last=True)
+    #train_batches = Batches(Transform(train_set, train_transforms), batch_size, shuffle=True, set_random_choices=True, drop_last=True)
+    train_batches = Batches(train_set, batch_size, shuffle=True, set_random_choices=False, drop_last=True)
+
     test_batches = Batches(test_set, batch_size, shuffle=False, drop_last=False)
     lr = lambda step: lr_schedule(step/len(train_batches))/batch_size
     opt = SGD(trainable_params(model), lr=lr, momentum=0.9, weight_decay=5e-4*batch_size, nesterov=True)

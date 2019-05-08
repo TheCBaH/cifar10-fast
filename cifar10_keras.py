@@ -356,46 +356,57 @@ def resnet_v2(input_shape, depth, num_classes=10):
     return model
 
 def resnet_v3(input_shape, num_classes=10):
+    use_bias=False
+    batch_norm=True
+    padding='Same'
     inputs = Input(shape=input_shape)
-    c_out=64
-    x = keras.layers.Conv2D(c_out,kernel_size=3, strides=1, padding='same', use_bias=False)(inputs);
-    x = keras.layers.BatchNormalization()(x)
+    c_out=32
+    x = keras.layers.Conv2D(c_out,kernel_size=3, strides=1, padding=padding, use_bias=use_bias)(inputs);
+    if batch_norm:
+        x = keras.layers.BatchNormalization()(x)
     x = keras.layers.Activation('relu')(x)
 
     c_out=c_out*2
-    x = keras.layers.Conv2D(c_out,kernel_size=3, strides=1, padding='same', use_bias=False)(x);
-    x = keras.layers.BatchNormalization()(x)
+    x = keras.layers.Conv2D(c_out,kernel_size=3, strides=1, padding=padding, use_bias=use_bias)(x);
+    if batch_norm:
+        x = keras.layers.BatchNormalization()(x)
     x = keras.layers.Activation('relu')(x)
     x = keras.layers.MaxPooling2D(2)(x)
     y = x
 
-    x = keras.layers.Conv2D(c_out,kernel_size=3, strides=1, padding='same', use_bias=False)(x);
-    x = keras.layers.BatchNormalization()(x)
+    x = keras.layers.Conv2D(c_out,kernel_size=3, strides=1, padding=padding, use_bias=use_bias)(x);
+    if batch_norm:
+        x = keras.layers.BatchNormalization()(x)
     x = keras.layers.Activation('relu')(x)
-    x = keras.layers.Conv2D(c_out,kernel_size=3, strides=1, padding='same', use_bias=False)(x);
-    x = keras.layers.BatchNormalization()(x)
+    x = keras.layers.Conv2D(c_out,kernel_size=3, strides=1, padding=padding, use_bias=use_bias)(x);
+    if batch_norm:
+        x = keras.layers.BatchNormalization()(x)
     x = keras.layers.Activation('relu')(x)
     x = keras.layers.add([x, y])
 
     c_out=c_out*2
-    x = keras.layers.Conv2D(c_out,kernel_size=3, strides=1, padding='same', use_bias=False)(x);
-    x = keras.layers.BatchNormalization()(x)
+    x = keras.layers.Conv2D(c_out,kernel_size=3, strides=1, padding=padding, use_bias=use_bias)(x);
+    if batch_norm:
+        x = keras.layers.BatchNormalization()(x)
     x = keras.layers.Activation('relu')(x)
     x = keras.layers.MaxPooling2D(2)(x)
 
     c_out=c_out*2
 
-    x = keras.layers.Conv2D(c_out,kernel_size=3, strides=1, padding='same', use_bias=False)(x);
-    x = keras.layers.BatchNormalization()(x)
+    x = keras.layers.Conv2D(c_out,kernel_size=3, strides=1, padding=padding, use_bias=use_bias)(x);
+    if batch_norm:
+        x = keras.layers.BatchNormalization()(x)
     x = keras.layers.Activation('relu')(x)
     x = keras.layers.MaxPooling2D(2)(x)
     y = x
 
-    x = keras.layers.Conv2D(c_out,kernel_size=3, strides=1, padding='same', use_bias=False)(x);
-    x = keras.layers.BatchNormalization()(x)
+    x = keras.layers.Conv2D(c_out,kernel_size=3, strides=1, padding=padding, use_bias=use_bias)(x);
+    if batch_norm:
+        x = keras.layers.BatchNormalization()(x)
     x = keras.layers.Activation('relu')(x)
-    x = keras.layers.Conv2D(c_out,kernel_size=3, strides=1, padding='same', use_bias=False)(x);
-    x = keras.layers.BatchNormalization()(x)
+    x = keras.layers.Conv2D(c_out,kernel_size=3, strides=1, padding=padding, use_bias=use_bias)(x);
+    if batch_norm:
+        x = keras.layers.BatchNormalization()(x)
     x = keras.layers.Activation('relu')(x)
     x = keras.layers.add([x, y])
 
@@ -454,8 +465,8 @@ if not data_augmentation:
     model.fit(x_train, y_train,
               batch_size=batch_size,
               epochs=epochs,
-              validation_split=0.2,
-              #validation_data=(x_test, y_test),
+              #validation_split=0.2,
+              validation_data=(x_test, y_test),
               shuffle=True,
               callbacks=callbacks
               )
