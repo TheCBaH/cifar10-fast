@@ -30,7 +30,8 @@ def basic_net(channels, weight,  pool, **kw):
     }
 
 def net(channels=None, weight=0.125, pool=nn.MaxPool2d(2), extra_layers=(), res_layers=('layer1', 'layer3'), **kw):
-    channels = channels or {'prep': 64, 'layer1': 128, 'layer2': 256, 'layer3': 512}
+    base=16
+    channels = channels or {'prep': base, 'layer1': base*2, 'layer2': base*4, 'layer3': base*8}
     n = basic_net(channels, weight, pool, **kw)
     for layer in res_layers:
         n[layer]['residual'] = residual(channels[layer], **kw)
