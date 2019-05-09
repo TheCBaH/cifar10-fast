@@ -5,7 +5,7 @@ from torch_backend import *
 def conv_bn(c_in, c_out, bn_weight_init=1.0, **kw):
     return {
         'conv': nn.Conv2d(c_in, c_out, kernel_size=3, stride=1, padding=1, bias=False), 
-        'bn': batch_norm(c_out, bn_weight_init=bn_weight_init, **kw), 
+#        'bn': batch_norm(c_out, bn_weight_init=bn_weight_init, **kw), 
         'relu': nn.ReLU(True)
     }
 
@@ -59,7 +59,7 @@ def main():
     print('Downloading datasets')
     dataset = cifar10(DATA_DIR)
 
-    epochs = 24
+    epochs = 5
     lr_schedule = PiecewiseLinear([0, 5, epochs], [0, 0.4, 0])
     batch_size = 512
     train_transforms = [Crop(32, 32), FlipLR(), Cutout(8, 8)]

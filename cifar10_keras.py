@@ -51,7 +51,7 @@ import os
 
 # Training parameters
 batch_size = 512# orig paper trained all networks with batch_size=128
-epochs = 200
+epochs = 5
 #data_augmentation = True
 data_augmentation = False
 num_classes = 10
@@ -357,7 +357,7 @@ def resnet_v2(input_shape, depth, num_classes=10):
 
 def resnet_v3(input_shape, num_classes=10):
     use_bias=False
-    batch_norm=True
+    batch_norm=False
     padding='Same'
     inputs = Input(shape=input_shape)
     c_out=32
