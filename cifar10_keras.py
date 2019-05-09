@@ -57,7 +57,7 @@ data_augmentation = False
 num_classes = 10
 
 # Subtracting pixel mean improves accuracy
-subtract_pixel_mean = True
+subtract_pixel_mean = False
 
 # Model parameter
 # ----------------------------------------------------------------------------
