@@ -103,7 +103,7 @@ def main():
     print('Preprocessing test data')
     test_set = list(
         zip(transpose(normalise(dataset['test']['data'])), dataset['test']['labels']))
-    print('Finished in {:.2} seconds'.format(timer())
+    print('Finished in {:.2} seconds'.format(timer()))
 
     TSV=TSVLogger()
 
